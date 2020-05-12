@@ -1,6 +1,8 @@
+// import 'dart:html'; // For Web only
 import 'dart:math';
 
 import 'package:flappyBird/utils/bird_pos.dart';
+import 'package:flappyBird/utils/shared.dart';
 import 'package:flappyBird/utils/speed_factor.dart';
 import 'package:flappyBird/utils/utils.dart';
 import 'package:flappyBird/widgets/base_widget.dart';
@@ -10,6 +12,7 @@ import 'package:flappyBird/widgets/pipe_widget.dart';
 import 'package:flappyBird/widgets/position_anmated_custom.dart';
 import 'package:flappyBird/widgets/score_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -24,14 +27,18 @@ class _HomeScreenState extends State<HomeScreen>
   int currentPoint = 0;
   int currentOffset = 0;
   double startOffset = 200;
-  int pipe = 200;
-  double height = 600;
-  double width = 300;
+  int pipe = 300;
+  int highScore = 0;
+  double height = 600.0;
+  double width = 350.0;
+  double range = -100.0;
+
   bool isEnd = false;
   bool isStart = false;
   bool isTap = false;
   bool init = false;
 
+  FocusNode _spaceNode = FocusNode();
   SpeedFactor _speedFactor = SpeedFactor();
   BirdPos _birdPos;
   Random random = Random();
@@ -66,10 +73,10 @@ class _HomeScreenState extends State<HomeScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (isStart == true) {
           _controller.jumpTo(getSpeedPipe());
-          if (onCollision() - getSpeedPipe() <= 0) {
+          if (getSpeedPipe() - onCollision() >= -42.0 &&
+              getSpeedPipe() - onCollision() <= 42.0) {
             if (isEndGame()) {
-            } else
-              currentPoint++;
+            } else if (getSpeedPipe() - onCollision() == 41.0) currentPoint++;
           }
           if (!isEnd) {
             currentOffset++;
@@ -89,11 +96,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   bool isEndGame() {
-    if (_birdPos.pos <= 320 + -100 * _ranNum[currentPoint] ||
-        _birdPos.pos >= 420 + -100 * _ranNum[currentPoint]) {
+    if (_birdPos.pos <= 320 + range * _ranNum[currentPoint] ||
+        _birdPos.pos >= 385 + range * _ranNum[currentPoint]) {
       isEnd = true;
       return true;
     } else {
+      if (highScore < currentPoint) {
+        highScore = currentPoint;
+        setHighScore(highScore);
+      }
       return false;
     }
   }
@@ -113,10 +124,15 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  initHighScore() async {
+    highScore = await getHighScore();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (init == false) {
       _birdPos = Provider.of<BirdPos>(context);
+      initHighScore();
       init = true;
     }
     if (isStart == false && isEnd == false) {
@@ -126,39 +142,66 @@ class _HomeScreenState extends State<HomeScreen>
         _controller.jumpTo(0);
       });
     }
+    FocusScope.of(context).requestFocus(_spaceNode);
 
-    return GestureDetector(
-      onTap: () {
-        print(_birdPos.pos);
-        if (isStart == false) {
-          setState(() {
-            isStart = true;
+    return RawKeyboardListener(
+      focusNode: _spaceNode,
+      autofocus: true,
+      onKey: (RawKeyEvent event) {
+        /// For [Web]
+        // if (event.logicalKey.keyId == KeyCode.SPACE &&
+        //     event.runtimeType == RawKeyDownEvent) {
+        //   if (isStart == false) {
+        //     setState(() {
+        //       isStart = true;
+        //     });
+        //   }
+        //   isTap = true;
+        //   Future.delayed(Duration(milliseconds: 150), () {
+        //     isTap = false;
+        //   });
+        // }
+
+        /// For [Windows] and [MacOS]
+        if (event.logicalKey == LogicalKeyboardKey.space &&
+            event.runtimeType == RawKeyDownEvent) {
+          if (isStart == false) {
+            setState(() {
+              isStart = true;
+            });
+          }
+          isTap = true;
+          Future.delayed(Duration(milliseconds: 150), () {
+            isTap = false;
           });
         }
-        isTap = true;
-        Future.delayed(Duration(milliseconds: 150), () {
-          isTap = false;
-        });
       },
-      child: Container(
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        color: Colors.white,
-        child: FittedBox(
-          child: SizedBox(
-            height: height,
-            width: width,
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(
-                    AssetName.sprites.backgroundDay,
-                  ),
-                  fit: BoxFit.cover,
-                ),
-              ),
+      child: GestureDetector(
+        onTap: () {
+          if (isStart == false) isStart = true;
+          isTap = true;
+          Future.delayed(Duration(milliseconds: 150), () {
+            isTap = false;
+          });
+        },
+        child: Container(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          color: Colors.white,
+          child: FittedBox(
+            child: SizedBox(
+              height: height,
+              width: width,
               child: Stack(
                 children: [
+                  SizedBox(
+                    height: height - 100,
+                    width: width,
+                    child: Image.asset(
+                      AssetName.sprites.backgroundDay,
+                      fit: BoxFit.fitWidth,
+                    ),
+                  ),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     controller: _controller,
@@ -172,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen>
                           } else if (index % 2 == 0 && index != 0) {
                             return Transform.translate(
                               offset:
-                                  Offset(0, -100 * _ranNum[(index - 2) ~/ 2]),
+                                  Offset(0, range * _ranNum[(index - 2) ~/ 2]),
                               child: PipeWidget(),
                             );
                           } else {
@@ -194,9 +237,10 @@ class _HomeScreenState extends State<HomeScreen>
                   Center(
                     child: MessageWidget(
                       isStart: isStart,
+                      score: highScore,
                     ),
                   ),
-                  isStart
+                  (isStart)
                       ? Padding(
                           padding: const EdgeInsets.only(bottom: 500),
                           child: Center(

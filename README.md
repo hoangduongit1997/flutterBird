@@ -1,16 +1,23 @@
-# flappyBird
+# Flutter Flappy Bird 🎮 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square) ![Star](https://img.shields.io/github/stars/definev/flutterBird?style=flat-square) ![Folk](https://img.shields.io/github/forks/definev/flutterBird?style=flat-square)](http://makeapullrequest.com)
 
-A new Flutter project.
+⭐️ this repo if you like it.
 
-## Getting Started
+## Getting Started 🚀
 
-This project is a starting point for a Flutter application.
+- Clone the repo
+- Install the dependicies
+- Run it
 
-A few resources to get you started if this is your first Flutter project:
+## Preview 📸
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+![Screenshot](assets/screenshot.png)
+![GamePlay](assets/screenshot2.png)
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
+## Try it in web 🚀
+
+Demo: https://definev.github.io/flutterBird
+
+## Contact me 📧
+#### Email : big.plus.uwu@gmail.com
+#### Facebook : https://www.facebook.com/profile.php?id=100013808691060
